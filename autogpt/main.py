@@ -146,7 +146,6 @@ def run_auto_gpt(
     for command_category in command_categories:
         command_registry.import_commands(command_category)
 
-    ai_name = ""
     ai_config = construct_main_ai_config()
     ai_config.command_registry = command_registry
     # print(prompt)
@@ -173,7 +172,7 @@ def run_auto_gpt(
         logger.typewriter_log("Prompt:", Fore.GREEN, system_prompt)
 
     agent = Agent(
-        ai_name=ai_name,
+        ai_name=ai_config.ai_name,
         memory=memory,
         full_message_history=full_message_history,
         next_action_count=next_action_count,
