@@ -1,6 +1,7 @@
 """Google search command for Autogpt."""
 from __future__ import annotations
 
+from typing import List
 import json
 
 from duckduckgo_search import ddg
@@ -11,7 +12,7 @@ from autogpt.config import Config
 CFG = Config()
 
 
-@command("google", "Google Search", '"query": "<query>"', not CFG.google_api_key)
+@command("duckduckgo", "DuckDuckGo Search", '"query": "<query>"', not CFG.google_api_key)
 def google_search(query: str, num_results: int = 8) -> str:
     """Return the results of a Google search
 
@@ -34,7 +35,7 @@ def google_search(query: str, num_results: int = 8) -> str:
         search_results.append(j)
 
     results = json.dumps(search_results, ensure_ascii=False, indent=4)
-    return safe_google_results(results)
+    return safe_ddg_results(results)
 
 
 @command(
@@ -44,7 +45,7 @@ def google_search(query: str, num_results: int = 8) -> str:
     bool(CFG.google_api_key),
     "Configure google_api_key.",
 )
-def google_official_search(query: str, num_results: int = 8) -> str | list[str]:
+def google_official_search(query: str, num_results: int = 8) -> str | List[str]:
     """Return the results of a Google search using the official Google API
 
     Args:
@@ -98,7 +99,7 @@ def google_official_search(query: str, num_results: int = 8) -> str | list[str]:
     return safe_google_results(search_results_links)
 
 
-def safe_google_results(results: str | list) -> str:
+def safe_ddg_results(results: str | list) -> str:
     """
         Return the results of a google search in a safe format.
 
@@ -112,6 +113,23 @@ def safe_google_results(results: str | list) -> str:
         safe_message = json.dumps(
             [result.encode("utf-8", "ignore") for result in results]
         )
+    else:
+        safe_message = results.encode("utf-8", "ignore").decode("utf-8")
+    return safe_message
+
+
+def safe_google_results(results: str | list) -> str:
+    """
+        Return the results of a google search in a safe format.
+
+    Args:
+        results (str | list): The search results.
+
+    Returns:
+        str: The results of the search.
+    """
+    if isinstance(results, list):
+        safe_message = json.dumps(str([result.encode("utf-8", "ignore") for result in results]))
     else:
         safe_message = results.encode("utf-8", "ignore").decode("utf-8")
     return safe_message
