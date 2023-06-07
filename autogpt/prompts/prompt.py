@@ -5,7 +5,7 @@ from autogpt.config.config import Config
 from autogpt.llm import ApiManager
 from autogpt.logs import logger
 from autogpt.prompts.generator import PromptGenerator
-from autogpt.setup import prompt_user
+from autogpt.setup import prompt_user, gen_from_task
 from autogpt.utils import clean_input
 
 CFG = Config()
@@ -129,5 +129,91 @@ Continue ({CFG.authorise_key}/{CFG.exit_key}): """
     logger.typewriter_log("Goals:", Fore.GREEN, "", speak_text=False)
     for goal in config.ai_goals:
         logger.typewriter_log("-", Fore.GREEN, goal, speak_text=False)
+
+    return config
+
+
+def construct_task_ai_config() -> AIConfig:
+    """Construct the prompt for the AI to respond to
+
+    Returns:
+        str: The prompt string
+    """
+    from autogpt.tasks_manager import TasksManager
+    TM = TasksManager()
+    current_task_id = TM.get_wip_task_id()
+    config = gen_from_task(current_task_id)
+
+    config.save(CFG.ai_settings_file)
+
+    # set the total api budget
+    api_manager = ApiManager()
+    api_manager.set_total_budget(config.api_budget)
+
+    # Agent Created, print message
+    logger.typewriter_log(
+        config.ai_name,
+        Fore.LIGHTBLUE_EX,
+        "has been created with the following details:",
+        speak_text=True,
+    )
+
+    # Print the ai config details
+    # Name
+    logger.typewriter_log("Name:", Fore.GREEN, config.ai_name, speak_text=False)
+    # Role
+    logger.typewriter_log("Role:", Fore.GREEN, config.ai_role, speak_text=False)
+    # Goals
+    logger.typewriter_log("Goals:", Fore.GREEN, "", speak_text=False)
+    for goal in config.ai_goals:
+        logger.typewriter_log("-", Fore.GREEN, goal, speak_text=False)
+
+    return config
+
+def construct_specific_ai_config(ai_settings_file=None) -> AIConfig:
+    """Construct the prompt for the AI to respond to
+
+    Returns:
+        str: The prompt string
+    """
+    if not ai_settings_file:
+        config = AIConfig.load(CFG.ai_settings_file)
+    else:
+        config = AIConfig.load(f"{ai_settings_file}.yaml")
+        
+    if config.ai_name:
+        logger.typewriter_log("Name :", Fore.GREEN, config.ai_name)
+        logger.typewriter_log("Role :", Fore.GREEN, config.ai_role)
+        logger.typewriter_log("Goals:", Fore.GREEN, f"{config.ai_goals}")
+        logger.typewriter_log(
+            "API Budget:",
+            Fore.GREEN,
+            "infinite" if config.api_budget <= 0 else f"${config.api_budget}",
+        )
+
+        # set the total api budget
+        api_manager = ApiManager()
+        api_manager.set_total_budget(config.api_budget)
+
+        # Agent Created, print message
+        logger.typewriter_log(
+            config.ai_name,
+            Fore.LIGHTBLUE_EX,
+            "has been created with the following details:",
+            speak_text=True,
+        )
+
+        # Print the ai config details
+        # Name
+        logger.typewriter_log("Name:", Fore.GREEN, config.ai_name, speak_text=False)
+        # Role
+        logger.typewriter_log("Role:", Fore.GREEN, config.ai_role, speak_text=False)
+        # Goals
+        logger.typewriter_log("Goals:", Fore.GREEN, "", speak_text=False)
+        for goal in config.ai_goals:
+            logger.typewriter_log("-", Fore.GREEN, goal, speak_text=False)
+
+    else:
+        raise Exception("Sorry, can't load agent")
 
     return config

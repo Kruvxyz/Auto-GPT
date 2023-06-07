@@ -72,6 +72,46 @@ def prompt_user() -> AIConfig:
 
             return generate_aiconfig_manual()
 
+def gen_from_task(task_id: int) -> AIConfig:
+    """gen configuration based on task id
+
+    Returns:
+        AIConfig: The AIConfig object tailored to the user's input
+    """
+    ai_name = ""
+    ai_config = None
+
+    from autogpt.tasks_manager import TasksManager
+    TM = TasksManager()
+    task_json = TM.get_task_content(task_id)
+    task_name = task_json.get("name", None)
+    task_description = task_json.get("description", None)
+
+    # Construct the prompt
+    logger.typewriter_log(
+        "Welcome to Auto-GPT! ",
+        Fore.GREEN,
+        f"Generating agent for task: '{task_name}'",
+        speak_text=True,
+    )
+
+
+    user_desire = task_description
+
+    if task_description == "":
+        task_description = DEFAULT_USER_DESIRE_PROMPT  # Default prompt
+
+    try:
+        return generate_aiconfig_automatic(task_description)
+    except Exception as e:
+        logger.typewriter_log(
+            "Unable to automatically generate AI Config based on user desire.",
+            Fore.RED,
+            "Falling back to manual mode.",
+            speak_text=True,
+        )
+
+        return generate_aiconfig_manual()
 
 def generate_aiconfig_manual() -> AIConfig:
     """

@@ -144,6 +144,10 @@ class Config(metaclass=Singleton):
         self.plugins: List[AutoGPTPluginTemplate] = []
         self.plugins_openai = []
 
+        # Tasks manager
+        self.tasks_manager_server = os.getenv("TASK_MANAGER_SERVER")
+        self.current_task_exists = False
+
         plugins_allowlist = os.getenv("ALLOWLISTED_PLUGINS")
         if plugins_allowlist:
             self.plugins_allowlist = plugins_allowlist.split(",")
